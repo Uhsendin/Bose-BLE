@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.bose_ble"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.bose_ble"
