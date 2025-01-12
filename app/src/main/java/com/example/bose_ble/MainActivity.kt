@@ -3,6 +3,10 @@ package com.example.bose_ble
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -30,8 +34,31 @@ private const val PERMISSION_REQUEST_CODE = 1
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var binding: MainActivity
 
+    /****************************************
+     * Properties
+     ***************************************/
+    private val bluetoothAdapter: BluetoothAdapter by lazy {
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothManager.adapter
+    }
+
+    private val bluetoothEnablingResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+           // Bluetooth is enabled, good to go
+        } else {
+            promptEnabledBluetooth()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!bluetoothAdapter.isEnabled) {
+            promptEnabledBluetooth()
+        }
+    }
 
     /****************************************
      * Private functions
@@ -39,6 +66,19 @@ class MainActivity : ComponentActivity() {
     /****************************************
      * Prompts the user to enable Bluetooth via system dialog
      */
+
+    private fun promptEnabledBluetooth() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+            // Insufficient permission to prompt for Bluetooth enabling
+            return
+        }
+        if (!bluetoothAdapter.isEnabled) {
+            Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE).apply {
+                bluetoothEnablingResult.launch(this)
+            }
+        }
+    }
+
     private fun startBleScan() {
         if (!hasRequiredBluetoothPermissions()) {
             requestRelevantRuntimePermissions()
