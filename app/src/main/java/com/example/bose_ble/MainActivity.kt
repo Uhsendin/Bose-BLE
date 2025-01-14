@@ -43,6 +43,10 @@ class MainActivity : ComponentActivity() {
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
         .build()
 
+
+
+    private var isScanning = false
+
     @SuppressLint("MissingPermission")
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -94,8 +98,16 @@ class MainActivity : ComponentActivity() {
             requestRelevantRuntimePermissions()
         } else {
             bleScanner.startScan(null, scanSettings, scanCallback)
+            isScanning = true
         }
     }
+
+    @SuppressLint("MissingPermission")
+    private fun stopBleScan() {
+        bleScanner.stopScan(scanCallback)
+        isScanning = false
+    }
+
 
     private fun Activity.requestRelevantRuntimePermissions() {
         if (hasRequiredBluetoothPermissions()) {
@@ -151,13 +163,20 @@ class MainActivity : ComponentActivity() {
             }
             .show()
     }
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val startScanButton: Button = findViewById(R.id.scan_button)
 
         startScanButton.setOnClickListener{
-            startBleScan()
+            if (isScanning) {
+                stopBleScan()
+                startScanButton.text = "Start Scan"
+            } else {
+                startBleScan()
+                startScanButton.text = "Stop Scan"
+            }
         }
 
     }
