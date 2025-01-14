@@ -10,24 +10,16 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.view.inputmethod.InputBinding
+import android.annotation.SuppressLint
+import android.bluetooth.le.ScanSettings
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.util.Log
 import android.widget.Button
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.savedinstancestate.savedInstanceState
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
-import com.example.bose_ble.ui.theme.BoseBLETheme
 import timber.log.Timber
 
 private const val PERMISSION_REQUEST_CODE = 1
@@ -41,6 +33,23 @@ class MainActivity : ComponentActivity() {
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
+    }
+
+    private val bleScanner by lazy {
+        bluetoothAdapter.bluetoothLeScanner
+    }
+
+    private val scanSettings = ScanSettings.Builder()
+        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        .build()
+
+    @SuppressLint("MissingPermission")
+    private val scanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            with(result.device) {
+                Log.i("ScanCallback","Found BLE device! Name: ${name ?: "Unknown"}, address: $address")
+            }
+        }
     }
 
     private val bluetoothEnablingResult = registerForActivityResult(
@@ -79,11 +88,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("MissingPermission", "NotifyDataSetChanged") // check performed inside extension function
     private fun startBleScan() {
         if (!hasRequiredBluetoothPermissions()) {
             requestRelevantRuntimePermissions()
         } else {
-            // Do something
+            bleScanner.startScan(null, scanSettings, scanCallback)
         }
     }
 
