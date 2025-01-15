@@ -2,6 +2,7 @@ package com.example.bose_ble
 
 import android.annotation.SuppressLint
 import android.bluetooth.le.ScanResult
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ScanResultAdapter(
     private val items: List<ScanResult>,
-    private val onClickListener: ((device: ScanResult) -> Unit)
+    private val onClickListener: ((device: ScanResult) -> Unit),
 ) : RecyclerView.Adapter<ScanResultAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
