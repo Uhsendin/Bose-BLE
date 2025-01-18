@@ -11,9 +11,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanSettings
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
@@ -27,6 +24,7 @@ import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.example.bose_ble.ble.ConnectionManager
 import timber.log.Timber
 
 private const val PERMISSION_REQUEST_CODE = 1
@@ -66,29 +64,11 @@ class MainActivity : ComponentActivity() {
             }
             with(result.device) {
                 Log.w("ScanResultAdapter", "Connecting to $address")
-                connectGatt(context, false, gattCallback)
+                ConnectionManager.connect(this,this@MainActivity)
             }
         }
     }
 
-    private val gattCallback = object : BluetoothGattCallback() {
-        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            val deviceAddress = gatt.device.address
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (newState == BluetoothProfile.STATE_CONNECTING) {
-                    Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
-                    // TODO: Store a reference to Gatt
-                } else if (newState ==
-                    BluetoothProfile.STATE_DISCONNECTED) {
-                    Log.w("BluetoothGattCallback", "Successfuly disconnected from $deviceAddress")
-                    gatt.close()
-                }
-            } else {
-                Log.w("BluetoothGattCallback", "Error $status encoutnered for $deviceAddress! Disconnecting...")
-                gatt.close()
-            }
-        }
-    }
 
     @SuppressLint("MissingPermission")
     private val scanCallback = object : ScanCallback() {
