@@ -4,13 +4,16 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import java.util.concurrent.ConcurrentHashMap
+
+private const val GATT_MAX_MTU_SIZE = 517
+private const val GATT_MIN_MTU_SIZE = 23
 
 @SuppressLint("MissingPermission")
 object ConnectionManager {
@@ -51,6 +54,54 @@ object ConnectionManager {
             }
 
         }
-    }
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            Log.w("BluetoothGattCallback", "ATT MTU chagned to $mtu, success: ${status == BluetoothGatt.GATT_SUCCESS}")
+        }
 
+        @Deprecated("Deprecated for Android 13+")
+        @Suppress("DEPRECATION")
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
+        ) {
+            with (characteristic) {
+                when (status) {
+                    BluetoothGatt.GATT_SUCCESS -> {
+                        Log.i("BluetoothGattCallback", "Read characteristic $uuid:\n${value.toHexString()}")
+                    }
+                    BluetoothGatt.GATT_READ_NOT_PERMITTED -> {
+                        Log.e("BluetoothGattCallback", "Read not permitted for $uuid!")
+                    }
+                    else -> {
+                        Log.e("BluetoothGattCalback", "Characteristic read failed for $uuid, error: $status")
+                    }
+                }
+            }
+        }
+
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray,
+            status: Int
+        ) {
+            val uuid = characteristic.uuid
+            when (status) {
+                BluetoothGatt.GATT_SUCCESS -> {
+                    Log.i("BluetoothGattCallback", "Read characteristic $uuid:\n${value.toHexString()}")
+                }
+                BluetoothGatt.GATT_READ_NOT_PERMITTED -> {
+                    Log.e("BluetoothGattCallback", "Read not permitted for $uuid!")
+                }
+                else -> {
+                    Log.e("BluetoothGattCalback", "Characteristic read failed for $uuid, error: $status")
+                }
+            }
+        }
+    }
+    fun ByteArray.toHexString(): String =
+        joinToString(separator = " ", prefix = "0x") {
+            String.format("%02x", it)
+        }
 }
