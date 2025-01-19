@@ -26,7 +26,6 @@ object ConnectionManager {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
-                    // TODO: Store a reference to Gatt
                     deviceGattMap[gatt.device] = gatt
                     Handler(Looper.getMainLooper()).post {
                         gatt.discoverServices()
@@ -42,5 +41,16 @@ object ConnectionManager {
                 gatt.close()
             }
         }
+
+        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            with(gatt) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    Log.w("BluetoothGattCallback", "Discovered ${services.size} services for ${device.address}")
+                    printGattTable()
+                }
+            }
+
+        }
     }
+
 }
